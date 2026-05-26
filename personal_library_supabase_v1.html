@@ -1,0 +1,668 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.lib{padding:1rem 0}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.topbar h2{font-size:17px;font-weight:600;color:var(--color-text-primary)}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:#3B6D11;display:inline-block;margin-right:6px}
+.sync-dot.syncing{background:#854F0B;animation:pulse 1s infinite}
+.sync-dot.error{background:#A32D2D}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.sync-label{font-size:12px;color:var(--color-text-secondary)}
+.loading-bar{height:3px;background:var(--color-background-info);border-radius:2px;margin-bottom:12px;animation:slide 1s infinite}
+@keyframes slide{0%{width:0;margin-left:0}50%{width:60%;margin-left:20%}100%{width:0;margin-left:100%}}
+.error-banner{background:var(--color-background-danger);color:var(--color-text-danger);border:0.5px solid var(--color-border-danger);border-radius:var(--border-radius-md);padding:10px 14px;font-size:13px;margin-bottom:12px}
+.tabs{display:flex;gap:4px;margin-bottom:1.5rem;border-bottom:0.5px solid var(--color-border-tertiary)}
+.tab{padding:8px 14px;font-size:14px;cursor:pointer;border:none;background:none;color:var(--color-text-secondary);border-bottom:2px solid transparent;margin-bottom:-0.5px;display:flex;align-items:center;gap:6px}
+.tab.active{color:var(--color-text-primary);border-bottom-color:var(--color-text-primary);font-weight:500}
+.section{display:none}.section.active{display:block}
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1.25rem}
+.stat{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px}
+.stat-n{font-size:22px;font-weight:500;color:var(--color-text-primary)}
+.stat-l{font-size:12px;color:var(--color-text-secondary);margin-top:2px}
+.filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.filter-row input{flex:1;min-width:120px;font-size:14px}
+.filter-row select{font-size:14px}
+.genre-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem}
+.pill{padding:5px 12px;border-radius:100px;font-size:12px;cursor:pointer;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-secondary);font-weight:500;transition:all 0.12s}
+.pill:hover{border-color:var(--color-border-primary);color:var(--color-text-primary)}
+.pill.active{background:var(--color-text-primary);color:var(--color-background-primary);border-color:var(--color-text-primary)}
+.book-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.book-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px;cursor:pointer;transition:border-color 0.12s}
+.book-card:hover{border-color:var(--color-border-secondary)}
+.cover-wrap{width:100%;aspect-ratio:2/3;border-radius:var(--border-radius-md);margin-bottom:10px;background:var(--color-background-secondary);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.cover-wrap img{width:100%;height:100%;object-fit:cover}
+.book-title{font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:3px;line-height:1.3}
+.book-author{font-size:12px;color:var(--color-text-secondary);margin-bottom:6px}
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:100px;font-weight:500}
+.badge-lent{background:#FAEEDA;color:#854F0B}
+.badge-owned{background:#EAF3DE;color:#3B6D11}
+.badge-reading{background:#E6F1FB;color:#185FA5}
+.badge-wishlist{background:#EEEDFE;color:#534AB7}
+.add-form{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1.25rem}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.form-row.full{grid-template-columns:1fr}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group label{font-size:12px;color:var(--color-text-secondary)}
+.form-group input,.form-group select,.form-group textarea{font-size:14px;resize:vertical}
+.isbn-row{display:flex;gap:8px;align-items:flex-end}
+.isbn-row input{flex:1}
+.btn-primary{background:var(--color-text-primary);color:var(--color-background-primary);border:none;padding:8px 18px;border-radius:var(--border-radius-md);font-size:14px;cursor:pointer;font-weight:500;display:inline-flex;align-items:center;gap:6px}
+.btn-primary:hover{opacity:0.85}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed}
+.btn-sm{padding:6px 12px;font-size:13px}
+.btn-danger{background:var(--color-background-danger);color:var(--color-text-danger);border:0.5px solid var(--color-border-danger);padding:7px 14px;border-radius:var(--border-radius-md);font-size:13px;cursor:pointer;font-weight:500;display:inline-flex;align-items:center;gap:6px}
+.btn-scan{background:var(--color-background-info);color:var(--color-text-info);border:0.5px solid var(--color-border-info);padding:7px 14px;border-radius:var(--border-radius-md);font-size:13px;cursor:pointer;font-weight:500;display:inline-flex;align-items:center;gap:6px}
+.fetch-status{font-size:13px;color:var(--color-text-secondary);margin-top:5px;min-height:18px}
+.scanner-wrap{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-tertiary);padding:1rem;margin-bottom:1rem}
+.scanner-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.scanner-header span{font-size:14px;font-weight:500}
+#scanVideo{width:100%;border-radius:var(--border-radius-md);display:none;max-height:260px;object-fit:cover;background:#000}
+.scan-result{font-size:13px;color:var(--color-text-secondary);margin-top:8px;min-height:18px}
+.lend-list{display:flex;flex-direction:column;gap:10px}
+.lend-item{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px;display:flex;align-items:center;gap:14px}
+.lend-info{flex:1}
+.lend-title{font-size:14px;font-weight:500}
+.lend-meta{font-size:13px;color:var(--color-text-secondary);margin-top:2px}
+.overdue{color:#A32D2D}
+.empty{text-align:center;padding:2.5rem;color:var(--color-text-secondary);font-size:14px;grid-column:1/-1}
+.empty i{font-size:32px;display:block;margin-bottom:8px;opacity:0.4}
+.modal-wrap{min-height:420px;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;border-radius:var(--border-radius-lg);margin-top:8px}
+.modal-wrap.open{display:flex}
+.modal{background:var(--color-background-primary);border-radius:var(--border-radius-lg);padding:1.5rem;width:380px;max-width:95%;border:0.5px solid var(--color-border-tertiary)}
+.modal h3{font-size:16px;font-weight:500;margin-bottom:1rem}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:1rem;flex-wrap:wrap}
+.view-row{display:flex;flex-direction:column;gap:8px;font-size:14px}
+.vr{display:flex;gap:8px;align-items:baseline}
+.vk{font-size:12px;color:var(--color-text-tertiary);min-width:52px}
+.vv{color:var(--color-text-primary)}
+.edit-fields{display:flex;flex-direction:column;gap:10px}
+.edit-fields .form-group input,.edit-fields .form-group select,.edit-fields .form-group textarea{font-size:14px}
+.edit-fields .form-group label{font-size:12px;color:var(--color-text-secondary)}
+</style>
+
+<div class="lib">
+  <div class="topbar">
+    <h2><i class="ti ti-books"></i> My Library</h2>
+    <div style="display:flex;align-items:center;gap:6px">
+      <span class="sync-dot" id="syncDot"></span>
+      <span class="sync-label" id="syncLabel">Connected</span>
+    </div>
+  </div>
+  <div class="loading-bar" id="loadingBar" style="display:none"></div>
+  <div class="error-banner" id="errorBanner" style="display:none"></div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('shelf')"><i class="ti ti-books"></i> Shelf</button>
+    <button class="tab" onclick="showTab('add')"><i class="ti ti-plus"></i> Add Book</button>
+    <button class="tab" onclick="showTab('lent')"><i class="ti ti-send"></i> Lent Out</button>
+  </div>
+
+  <div id="shelf" class="section active">
+    <div class="stat-row" id="stats"></div>
+    <div class="filter-row">
+      <input type="text" id="search" placeholder="Search titles, authors, genre..." oninput="renderShelf()">
+      <select id="filterStatus" onchange="renderShelf()">
+        <option value="">All statuses</option>
+        <option value="owned">Owned</option>
+        <option value="reading">Reading</option>
+        <option value="lent">Lent out</option>
+        <option value="wishlist">Wishlist</option>
+      </select>
+      <select id="sortBy" onchange="renderShelf()">
+        <option value="title">Title A–Z</option>
+        <option value="author">Author</option>
+        <option value="year">Year</option>
+        <option value="added">Date added</option>
+      </select>
+    </div>
+    <div class="genre-pills" id="genrePills"></div>
+    <div class="book-grid" id="bookGrid"></div>
+  </div>
+
+  <div id="add" class="section">
+    <div class="add-form">
+      <div class="scanner-wrap">
+        <div class="scanner-header">
+          <span><i class="ti ti-camera"></i> Barcode scanner</span>
+          <button class="btn-scan" id="scanToggle" onclick="toggleScanner()"><i class="ti ti-scan"></i> Start camera</button>
+        </div>
+        <video id="scanVideo" playsinline muted autoplay></video>
+        <div class="scan-result" id="scanResult">Camera will auto-detect barcodes — no button needed.</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>ISBN (auto-filled by scanner, or type manually)</label>
+          <div class="isbn-row">
+            <input type="text" id="isbn" placeholder="9780141036144">
+            <button class="btn-primary btn-sm" onclick="lookupISBN()">Lookup</button>
+          </div>
+          <div class="fetch-status" id="fetchStatus"></div>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="fstatus">
+            <option value="owned">Owned</option>
+            <option value="reading">Currently reading</option>
+            <option value="wishlist">Wishlist</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Title *</label><input type="text" id="ftitle" placeholder="Book title"></div>
+        <div class="form-group"><label>Author *</label><input type="text" id="fauthor" placeholder="Author name"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Year published</label><input type="text" id="fyear" placeholder="e.g. 1949"></div>
+        <div class="form-group">
+          <label>Genre</label>
+          <input type="text" id="fgenre" placeholder="e.g. Fiction, History..." list="genreList">
+          <datalist id="genreList"></datalist>
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group"><label>Notes</label><textarea id="fnotes" rows="2" placeholder="Your notes, quotes, rating..."></textarea></div>
+      </div>
+      <input type="hidden" id="fcover">
+      <button class="btn-primary" id="addBtn" onclick="addBook()"><i class="ti ti-plus"></i> Add to library</button>
+      <span id="addStatus" style="font-size:13px;color:var(--color-text-secondary);margin-left:10px"></span>
+    </div>
+  </div>
+
+  <div id="lent" class="section">
+    <div id="lentList"></div>
+  </div>
+</div>
+
+<!-- Book detail modal -->
+<div class="modal-wrap" id="bookModalWrap">
+  <div class="modal">
+    <div id="modalViewMode">
+      <h3 id="modalTitle"></h3>
+      <div class="view-row" id="modalBody"></div>
+      <div class="modal-btns" id="modalBtns"></div>
+    </div>
+    <div id="modalEditMode" style="display:none">
+      <h3>Edit book</h3>
+      <div class="edit-fields">
+        <div class="form-group"><label>Title *</label><input type="text" id="eTitle"></div>
+        <div class="form-group"><label>Author *</label><input type="text" id="eAuthor"></div>
+        <div class="form-row" style="margin-bottom:0">
+          <div class="form-group"><label>Year</label><input type="text" id="eYear"></div>
+          <div class="form-group"><label>Genre</label><input type="text" id="eGenre" list="genreList"></div>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="eStatus">
+            <option value="owned">Owned</option>
+            <option value="reading">Currently reading</option>
+            <option value="lent">Lent out</option>
+            <option value="wishlist">Wishlist</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Notes</label><textarea id="eNotes" rows="2"></textarea></div>
+      </div>
+      <div class="modal-btns">
+        <button onclick="cancelEdit()">Cancel</button>
+        <button class="btn-primary" id="saveEditBtn" onclick="saveEdit()"><i class="ti ti-check"></i> Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Lend modal -->
+<div class="modal-wrap" id="lendModalWrap">
+  <div class="modal">
+    <h3>Lend this book</h3>
+    <div class="form-group" style="margin-bottom:10px"><label>Lent to</label><input type="text" id="lendTo" placeholder="Name"></div>
+    <div class="form-group"><label>Date lent</label><input type="date" id="lendDate"></div>
+    <div class="modal-btns">
+      <button onclick="closeLendModal()">Cancel</button>
+      <button class="btn-primary" onclick="confirmLend()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm delete modal -->
+<div class="modal-wrap" id="confirmDeleteWrap">
+  <div class="modal">
+    <h3>Remove this book?</h3>
+    <p style="font-size:14px;color:var(--color-text-secondary);margin-bottom:6px" id="deleteBookName"></p>
+    <p style="font-size:13px;color:var(--color-text-secondary)">This will remove it for everyone. This can't be undone.</p>
+    <div class="modal-btns">
+      <button onclick="cancelDelete()">Cancel</button>
+      <button class="btn-danger" id="confirmDeleteBtn" onclick="confirmDelete()"><i class="ti ti-trash"></i> Remove</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://eyvmuypiiwxtkhbyaioe.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5dm11eXBpaXd4dGtoYnlhaW9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2NzMzMzMsImV4cCI6MjA5NTI0OTMzM30.IABky1K1YQ9V_xMIbIusbSVpMbUKOdLkq5kBzQXx2P8';
+
+const STATUS_LABELS = {owned:'Owned',reading:'Reading',lent:'Lent out',wishlist:'Wishlist'};
+let db, books=[], activeGenre='', currentBookId=null;
+let scanStream=null, scanInterval=null;
+
+// ─── Supabase helpers ────────────────────────────────────────────────────────
+
+function toDb(b){
+  return {
+    id: b.id,
+    title: b.title||'',
+    author: b.author||'',
+    year: b.year||'',
+    genre: b.genre||'',
+    status: b.status||'owned',
+    cover: b.cover||'',
+    notes: b.notes||'',
+    lent_to: b.lentTo||null,
+    lent_date: b.lentDate||null,
+    added: b.added||Date.now()
+  };
+}
+
+function fromDb(r){
+  return {
+    id: r.id,
+    title: r.title||'',
+    author: r.author||'',
+    year: r.year||'',
+    genre: r.genre||'',
+    status: r.status||'owned',
+    cover: r.cover||'',
+    notes: r.notes||'',
+    lentTo: r.lent_to||'',
+    lentDate: r.lent_date||'',
+    added: r.added||Date.now()
+  };
+}
+
+function setSyncing(state){ // 'ok' | 'syncing' | 'error'
+  const dot=document.getElementById('syncDot');
+  const label=document.getElementById('syncLabel');
+  dot.className='sync-dot'+(state==='syncing'?' syncing':state==='error'?' error':'');
+  label.textContent=state==='syncing'?'Saving…':state==='error'?'Offline':'Synced';
+}
+
+function setLoading(on){
+  document.getElementById('loadingBar').style.display=on?'block':'none';
+}
+
+function showError(msg){
+  const el=document.getElementById('errorBanner');
+  el.textContent=msg; el.style.display=msg?'block':'none';
+}
+
+async function loadBooks(){
+  setLoading(true); showError('');
+  try{
+    const {data,error}=await db.from('books').select('*').order('added',{ascending:false});
+    if(error)throw error;
+    books=data.map(fromDb);
+    setSyncing('ok');
+  }catch(e){
+    setSyncing('error');
+    showError('Could not load from database. Check your connection and try refreshing.');
+  }
+  setLoading(false);
+  renderAll();
+}
+
+async function dbInsert(book){
+  setSyncing('syncing');
+  const {error}=await db.from('books').insert([toDb(book)]);
+  if(error){setSyncing('error');showError('Save failed: '+error.message);return false;}
+  setSyncing('ok'); return true;
+}
+
+async function dbUpdate(id, fields){
+  setSyncing('syncing');
+  // convert camelCase fields to snake_case for DB
+  const dbFields={};
+  for(const[k,v]of Object.entries(fields)){
+    if(k==='lentTo') dbFields.lent_to=v;
+    else if(k==='lentDate') dbFields.lent_date=v;
+    else dbFields[k]=v;
+  }
+  const {error}=await db.from('books').update(dbFields).eq('id',id);
+  if(error){setSyncing('error');showError('Update failed: '+error.message);return false;}
+  setSyncing('ok'); return true;
+}
+
+async function dbDelete(id){
+  setSyncing('syncing');
+  const {error}=await db.from('books').delete().eq('id',id);
+  if(error){setSyncing('error');showError('Delete failed: '+error.message);return false;}
+  setSyncing('ok'); return true;
+}
+
+// ─── Render ──────────────────────────────────────────────────────────────────
+
+function renderAll(){renderStats();renderShelf();renderLent();updateGenreDatalist();}
+
+function renderStats(){
+  const c={owned:0,reading:0,lent:0,wishlist:0};
+  books.forEach(b=>{if(c[b.status]!==undefined)c[b.status]++;});
+  document.getElementById('stats').innerHTML=`
+    <div class="stat"><div class="stat-n">${books.length}</div><div class="stat-l">Total</div></div>
+    <div class="stat"><div class="stat-n">${c.reading}</div><div class="stat-l">Reading</div></div>
+    <div class="stat"><div class="stat-n">${c.lent}</div><div class="stat-l">Lent out</div></div>
+    <div class="stat"><div class="stat-n">${c.wishlist}</div><div class="stat-l">Wishlist</div></div>`;
+}
+
+function getGenres(){
+  const g=new Set(); books.forEach(b=>{if(b.genre&&b.genre.trim())g.add(b.genre.trim());}); return[...g].sort();
+}
+
+function renderGenrePills(){
+  const genres=getGenres();
+  const el=document.getElementById('genrePills');
+  el.innerHTML='';
+  if(!genres.length)return;
+  const allPill=document.createElement('span');
+  allPill.className='pill'+(activeGenre===''?' active':'');
+  allPill.textContent='All';
+  allPill.addEventListener('click',()=>setGenre(''));
+  el.appendChild(allPill);
+  genres.forEach(g=>{
+    const pill=document.createElement('span');
+    pill.className='pill'+(activeGenre===g?' active':'');
+    pill.textContent=g;
+    pill.addEventListener('click',()=>setGenre(g));
+    el.appendChild(pill);
+  });
+}
+
+function setGenre(g){activeGenre=g;renderShelf();}
+
+function renderShelf(){
+  renderGenrePills();
+  const q=document.getElementById('search').value.toLowerCase();
+  const sf=document.getElementById('filterStatus').value;
+  const sort=document.getElementById('sortBy').value;
+  let list=books.filter(b=>{
+    const match=!q||(b.title||'').toLowerCase().includes(q)||(b.author||'').toLowerCase().includes(q)||(b.genre||'').toLowerCase().includes(q);
+    return match&&(!sf||b.status===sf)&&(!activeGenre||b.genre===activeGenre);
+  });
+  list.sort((a,b)=>{
+    if(sort==='title')return(a.title||'').localeCompare(b.title||'');
+    if(sort==='author')return(a.author||'').localeCompare(b.author||'');
+    if(sort==='year')return(b.year||0)-(a.year||0);
+    return b.added-a.added;
+  });
+  const grid=document.getElementById('bookGrid');
+  if(!list.length){grid.innerHTML='<div class="empty"><i class="ti ti-books"></i>No books found</div>';return;}
+  grid.innerHTML=list.map(b=>`
+    <div class="book-card" onclick="openBook(${b.id})">
+      <div class="cover-wrap">
+        ${b.cover
+          ?`<img src="${b.cover}" alt="" onerror="this.parentElement.innerHTML='<i class=\\'ti ti-book\\' style=\\'font-size:28px;opacity:.3;\\'></i>'">`
+          :`<i class="ti ti-book" style="font-size:28px;opacity:.3;"></i>`}
+      </div>
+      <div class="book-title">${b.title}</div>
+      <div class="book-author">${b.author}</div>
+      ${b.genre?`<div style="font-size:11px;color:var(--color-text-tertiary);margin-bottom:5px">${b.genre}</div>`:''}
+      <span class="badge badge-${b.status}">${STATUS_LABELS[b.status]||b.status}</span>
+    </div>`).join('');
+}
+
+function updateGenreDatalist(){
+  const dl=document.getElementById('genreList');
+  if(dl)dl.innerHTML=getGenres().map(g=>`<option value="${g}">`).join('');
+}
+
+function renderLent(){
+  const lentBooks=books.filter(b=>b.status==='lent');
+  const el=document.getElementById('lentList');
+  if(!lentBooks.length){el.innerHTML='<div class="empty"><i class="ti ti-send"></i>No books currently lent out</div>';return;}
+  const today=new Date();
+  el.innerHTML='<div class="lend-list">'+lentBooks.map(b=>{
+    const d=b.lentDate?new Date(b.lentDate):null;
+    const days=d?Math.round((today-d)/86400000):null;
+    const overdue=days!==null&&days>30;
+    return`<div class="lend-item">
+      <i class="ti ti-book" style="font-size:22px;opacity:.4;"></i>
+      <div class="lend-info">
+        <div class="lend-title">${b.title}</div>
+        <div class="lend-meta">by ${b.author}</div>
+        <div class="lend-meta ${overdue?'overdue':''}">${b.lentTo?'Lent to: '+b.lentTo:''}${days!==null?' · '+days+' days ago'+(overdue?' ⚠ overdue':''):''}</div>
+      </div>
+      <button class="btn-primary btn-sm" onclick="returnBook(${b.id})">Returned</button>
+    </div>`;
+  }).join('')+'</div>';
+}
+
+// ─── Scanner (native BarcodeDetector + video stream) ─────────────────────────
+
+async function toggleScanner(){
+  if(scanStream){stopScanner();return;}
+  const video=document.getElementById('scanVideo');
+  const result=document.getElementById('scanResult');
+  const btn=document.getElementById('scanToggle');
+
+  if(!('BarcodeDetector' in window)){
+    // Fallback: tell user to type ISBN
+    result.textContent='Auto-scan not supported in this browser. Please type the ISBN manually and tap Lookup.';
+    return;
+  }
+
+  try{
+    scanStream=await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}
+    });
+    video.srcObject=scanStream;
+    video.style.display='block';
+    btn.innerHTML='<i class="ti ti-x"></i> Stop camera';
+    result.textContent='Point the camera at the barcode on the back of the book…';
+
+    const detector=new BarcodeDetector({
+      formats:['ean_13','ean_8','upc_a','upc_e','code_128','code_39','isbn']
+    });
+
+    scanInterval=setInterval(async()=>{
+      if(!scanStream||video.readyState<2)return;
+      try{
+        const codes=await detector.detect(video);
+        if(codes.length>0){
+          const raw=codes[0].rawValue;
+          const isbn=raw.replace(/[^0-9X]/gi,'');
+          if(isbn.length>=9){
+            result.textContent='✓ Barcode detected: '+isbn;
+            document.getElementById('isbn').value=isbn;
+            stopScanner();
+            lookupISBN();
+          }
+        }
+      }catch(e){}
+    },300);
+
+  }catch(err){
+    scanStream=null;
+    result.textContent='Camera access denied — please type the ISBN manually.';
+  }
+}
+
+function stopScanner(){
+  if(scanInterval){clearInterval(scanInterval);scanInterval=null;}
+  if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null;}
+  const video=document.getElementById('scanVideo');
+  video.style.display='none';
+  video.srcObject=null;
+  document.getElementById('scanToggle').innerHTML='<i class="ti ti-scan"></i> Start camera';
+}
+
+async function lookupISBN(){
+  const isbn=document.getElementById('isbn').value.trim().replace(/[^0-9X]/gi,'');
+  if(!isbn)return;
+  const st=document.getElementById('fetchStatus');
+  st.textContent='Looking up…';
+  try{
+    const r=await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`);
+    const d=await r.json();
+    const key=`ISBN:${isbn}`;
+    if(!d[key]){st.textContent='Not found in Open Library — please enter details manually.';return;}
+    const info=d[key];
+    document.getElementById('ftitle').value=info.title||'';
+    document.getElementById('fauthor').value=info.authors?.[0]?.name||'';
+    const yr=info.publish_date||'';
+    document.getElementById('fyear').value=yr.match(/\d{4}/)?yr.match(/\d{4}/)[0]:yr;
+    document.getElementById('fgenre').value=info.subjects?.[0]?.name||'';
+    if(info.cover?.medium)document.getElementById('fcover').value=info.cover.medium;
+    st.textContent='✓ Details filled in from Open Library';
+  }catch(e){st.textContent='Lookup failed — please enter details manually.';}
+}
+
+// ─── Add book ────────────────────────────────────────────────────────────────
+
+async function addBook(){
+  const title=document.getElementById('ftitle').value.trim();
+  const author=document.getElementById('fauthor').value.trim();
+  if(!title||!author){document.getElementById('addStatus').textContent='Title and author are required.';return;}
+  const btn=document.getElementById('addBtn');
+  btn.disabled=true;
+  const book={
+    id:Date.now(),title,author,
+    year:document.getElementById('fyear').value.trim(),
+    genre:document.getElementById('fgenre').value.trim(),
+    status:document.getElementById('fstatus').value,
+    cover:document.getElementById('fcover').value,
+    notes:document.getElementById('fnotes').value.trim(),
+    added:Date.now()
+  };
+  const ok=await dbInsert(book);
+  btn.disabled=false;
+  if(!ok)return;
+  books.unshift(book);
+  ['ftitle','fauthor','fyear','fgenre','fnotes','isbn','fcover'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('fetchStatus').textContent='';
+  document.getElementById('addStatus').textContent=`"${title}" added!`;
+  setTimeout(()=>document.getElementById('addStatus').textContent='',2500);
+  renderAll();showTab('shelf');
+}
+
+// ─── Book modal ───────────────────────────────────────────────────────────────
+
+function openBook(id){
+  const b=books.find(x=>x.id===id);if(!b)return;
+  currentBookId=id;
+  document.getElementById('modalTitle').textContent=b.title;
+  document.getElementById('modalBody').innerHTML=`
+    <div class="vr"><span class="vk">Author</span><span class="vv">${b.author}</span></div>
+    ${b.year?`<div class="vr"><span class="vk">Year</span><span class="vv">${b.year}</span></div>`:''}
+    ${b.genre?`<div class="vr"><span class="vk">Genre</span><span class="vv">${b.genre}</span></div>`:''}
+    <div class="vr"><span class="vk">Status</span><span class="badge badge-${b.status}">${STATUS_LABELS[b.status]||b.status}</span></div>
+    ${b.lentTo?`<div class="vr"><span class="vk">Lent to</span><span class="vv">${b.lentTo}${b.lentDate?' · '+b.lentDate:''}</span></div>`:''}
+    ${b.notes?`<div class="vr" style="margin-top:4px"><span class="vk">Notes</span><span class="vv" style="font-style:italic;color:var(--color-text-secondary)">${b.notes}</span></div>`:''}`;
+  document.getElementById('modalBtns').innerHTML=
+    `<button onclick="askDelete(${id})" style="color:var(--color-text-danger);display:inline-flex;align-items:center;gap:4px"><i class="ti ti-trash"></i> Remove</button>`
+    +(b.status!=='lent'?`<button onclick="openLendModal(${id})" style="display:inline-flex;align-items:center;gap:4px"><i class="ti ti-send"></i> Lend out</button>`:'')
+    +`<button onclick="openEditMode(${id})" style="display:inline-flex;align-items:center;gap:4px"><i class="ti ti-edit"></i> Edit</button>`
+    +`<button class="btn-primary btn-sm" onclick="closeBookModal()">Close</button>`;
+  document.getElementById('modalViewMode').style.display='block';
+  document.getElementById('modalEditMode').style.display='none';
+  document.getElementById('bookModalWrap').classList.add('open');
+}
+
+function closeBookModal(){
+  document.getElementById('bookModalWrap').classList.remove('open');
+}
+
+function openEditMode(id){
+  const b=books.find(x=>x.id===id);if(!b)return;
+  currentBookId=id;
+  document.getElementById('eTitle').value=b.title||'';
+  document.getElementById('eAuthor').value=b.author||'';
+  document.getElementById('eYear').value=b.year||'';
+  document.getElementById('eGenre').value=b.genre||'';
+  document.getElementById('eStatus').value=b.status||'owned';
+  document.getElementById('eNotes').value=b.notes||'';
+  document.getElementById('modalViewMode').style.display='none';
+  document.getElementById('modalEditMode').style.display='block';
+}
+
+function cancelEdit(){
+  document.getElementById('modalViewMode').style.display='block';
+  document.getElementById('modalEditMode').style.display='none';
+}
+
+async function saveEdit(){
+  const title=document.getElementById('eTitle').value.trim();
+  const author=document.getElementById('eAuthor').value.trim();
+  if(!title||!author)return;
+  const btn=document.getElementById('saveEditBtn');btn.disabled=true;
+  const fields={title,author,year:document.getElementById('eYear').value.trim(),genre:document.getElementById('eGenre').value.trim(),status:document.getElementById('eStatus').value,notes:document.getElementById('eNotes').value.trim()};
+  const ok=await dbUpdate(currentBookId,fields);
+  btn.disabled=false;
+  if(!ok)return;
+  const b=books.find(x=>x.id===currentBookId);
+  if(b)Object.assign(b,fields);
+  closeBookModal();renderAll();
+}
+
+// ─── Delete ───────────────────────────────────────────────────────────────────
+
+function askDelete(id){
+  const b=books.find(x=>x.id===id);
+  document.getElementById('deleteBookName').textContent=b?`"${b.title}" by ${b.author}`:'';
+  currentBookId=id;closeBookModal();
+  document.getElementById('confirmDeleteWrap').classList.add('open');
+}
+function cancelDelete(){document.getElementById('confirmDeleteWrap').classList.remove('open');}
+async function confirmDelete(){
+  const btn=document.getElementById('confirmDeleteBtn');btn.disabled=true;
+  const ok=await dbDelete(currentBookId);
+  btn.disabled=false;
+  if(!ok)return;
+  books=books.filter(b=>b.id!==currentBookId);
+  cancelDelete();renderAll();
+}
+
+// ─── Lend / return ───────────────────────────────────────────────────────────
+
+function openLendModal(id){
+  currentBookId=id;closeBookModal();
+  document.getElementById('lendDate').value=new Date().toISOString().slice(0,10);
+  document.getElementById('lendTo').value='';
+  document.getElementById('lendModalWrap').classList.add('open');
+}
+function closeLendModal(){document.getElementById('lendModalWrap').classList.remove('open');}
+async function confirmLend(){
+  const to=document.getElementById('lendTo').value.trim();
+  const date=document.getElementById('lendDate').value;
+  if(!to)return;
+  const ok=await dbUpdate(currentBookId,{status:'lent',lentTo:to,lentDate:date});
+  if(!ok)return;
+  const b=books.find(x=>x.id===currentBookId);
+  if(b){b.status='lent';b.lentTo=to;b.lentDate=date;}
+  closeLendModal();renderAll();
+}
+async function returnBook(id){
+  const ok=await dbUpdate(id,{status:'owned',lentTo:null,lentDate:null});
+  if(!ok)return;
+  const b=books.find(x=>x.id===id);
+  if(b){b.status='owned';b.lentTo='';b.lentDate='';}
+  renderAll();
+}
+
+// ─── Tabs ─────────────────────────────────────────────────────────────────────
+
+function showTab(id){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['shelf','add','lent'][i]===id));
+  document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id===id));
+  if(id!=='add')stopScanner();
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+
+function init(){
+  if(typeof window.supabase==='undefined'){
+    setTimeout(init,100);return;
+  }
+  const {createClient}=window.supabase;
+  db=createClient(SUPABASE_URL,SUPABASE_KEY);
+  loadBooks();
+}
+init();
+</script>
